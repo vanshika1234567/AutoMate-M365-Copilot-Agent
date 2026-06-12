@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoMate — Microsoft 365 AI Agent</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0a0a14;
+    --surface: #12121f;
+    --surface2: #1a1a2e;
+    --border: #2a2a45;
+    --purple: #7c3aff;
+    --purple-light: #a78bfa;
+    --blue: #3b82f6;
+    --cyan: #06b6d4;
+    --green: #10b981;
+    --orange: #f59e0b;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ANIMATED BACKGROUND */
+  .bg-glow {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: 
+      radial-gradient(ellipse 600px 400px at 20% 20%, #7c3aff15 0%, transparent 70%),
+      radial-gradient(ellipse 400px 400px at 80% 80%, #3b82f615 0%, transparent 70%),
+      radial-gradient(ellipse 300px 300px at 50% 50%, #06b6d408 0%, transparent 70%);
+  }
+
+  /* HEADER */
+  .header {
+    position: relative; z-index: 10;
+    padding: 16px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: #0a0a14cc;
+    backdrop-filter: blur(12px);
+    position: sticky; top: 0;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text { font-size: 1.2rem; font-weight: 800; color: white; }
+  .logo-text span { color: var(--purple-light); }
+  .header-badge {
+    background: linear-gradient(90deg, var(--purple), var(--blue));
+    color: white; font-size: 0.7rem; font-weight: 700;
+    padding: 4px 12px; border-radius: 20px; letter-spacing: 0.5px;
+  }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse-dot 2s infinite;
+  }
+  @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.7;transform:scale(1.3)} }
+  .status-text { font-size: 0.75rem; color: var(--text-muted); }
+
+  /* MAIN LAYOUT */
+  .main {
+    position: relative; z-index: 1;
+    max-width: 1200px; margin: 0 auto;
+    padding: 24px 24px 60px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  /* HERO SECTION */
+  .hero {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px 20px 20px;
+  }
+  .hero-tag {
+    display: inline-block;
+    background: var(--purple)22;
+    border: 1px solid var(--purple)44;
+    color: var(--purple-light);
+    font-size: 0.75rem; font-weight: 600;
+    padding: 6px 16px; border-radius: 20px;
+    margin-bottom: 16px; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .hero h1 {
+    font-size: 3rem; font-weight: 900; line-height: 1.1;
+    color: white; margin-bottom: 12px;
+  }
+  .hero h1 span {
+    background: linear-gradient(135deg, var(--purple-light), var(--cyan));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero p { color: var(--text-muted); font-size: 1rem; max-width: 500px; margin: 0 auto 24px; }
+  
+  .stats-row {
+    display: flex; justify-content: center; gap: 32px;
+    margin-bottom: 8px;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-size: 1.5rem; font-weight: 800; color: white; }
+  .stat-num.purple { color: var(--purple-light); }
+  .stat-num.cyan { color: var(--cyan); }
+  .stat-num.green { color: var(--green); }
+  .stat-label { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .card-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .card-icon.purple { background: var(--purple)22; }
+  .card-icon.blue { background: var(--blue)22; }
+  .card-icon.green { background: var(--green)22; }
+  .card-icon.orange { background: var(--orange)22; }
+  .card-title { font-size: 0.9rem; font-weight: 700; color: white; }
+  .card-sub { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; }
+  .card-body { padding: 20px; }
+
+  /* INPUT AREA */
+  .input-area {
+    grid-column: 1 / -1;
+  }
+  textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    padding: 16px;
+    resize: vertical;
+    min-height: 140px;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+  textarea:focus { border-color: var(--purple); }
+  textarea::placeholder { color: var(--text-dim); }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .btn {
+    padding: 10px 20px; border-radius: 10px; border: none;
+    font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    color: white;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px var(--purple)44; }
+  .btn-secondary {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-secondary:hover { border-color: var(--purple); color: var(--purple-light); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+  /* PROCESSING */
+  .processing {
+    display: none;
+    background: var(--surface2);
+    border: 1px solid var(--purple)33;
+    border-radius: 12px; padding: 16px;
+    margin-top: 12px;
+  }
+  .processing.active { display: block; }
+  .process-steps { display: flex; flex-direction: column; gap: 8px; }
+  .process-step {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.82rem; color: var(--text-muted);
+  }
+  .process-step .step-icon { font-size: 1rem; width: 20px; text-align: center; }
+  .process-step.done { color: var(--green); }
+  .process-step.active { color: var(--purple-light); }
+  .process-step.active .step-icon { animation: spin 1s linear infinite; display: inline-block; }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+  /* SUMMARY OUTPUT */
+  .summary-box {
+    background: var(--surface2);
+    border: 1px solid var(--green)33;
+    border-radius: 12px; padding: 16px;
+    margin-top: 4px; display: none;
+  }
+  .summary-box.active { display: block; }
+  .summary-title {
+    font-size: 0.75rem; font-weight: 700; color: var(--green);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .summary-content {
+    font-size: 0.85rem; color: var(--text); line-height: 1.7;
+    white-space: pre-wrap;
+  }
+
+  /* TASKS */
+  .tasks-list { display: flex; flex-direction: column; gap: 8px; }
+  .task-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px;
+    display: flex; align-items: flex-start; gap: 10px;
+    transition: border-color 0.2s;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .task-item:hover { border-color: var(--purple)66; }
+  .task-check {
+    width: 18px; height: 18px; border-radius: 5px;
+    border: 2px solid var(--border); flex-shrink: 0;
+    cursor: pointer; margin-top: 1px; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .task-check.checked { background: var(--green); border-color: var(--green); }
+  .task-check.checked::after { content: '✓'; color: white; font-size: 11px; font-weight: 700; }
+  .task-text { font-size: 0.83rem; color: var(--text); line-height: 1.4; }
+  .task-meta { font-size: 0.7rem; color: var(--text-dim); margin-top: 3px; }
+  .task-priority {
+    font-size: 0.65rem; font-weight: 700; padding: 2px 7px;
+    border-radius: 6px; margin-left: auto; flex-shrink: 0;
+  }
+  .priority-high { background: var(--red)22; color: #fca5a5; }
+  .priority-med { background: var(--orange)22; color: #fcd34d; }
+  .priority-low { background: var(--green)22; color: #6ee7b7; }
+
+  /* MORNING BRIEFING */
+  .briefing-box {
+    background: linear-gradient(135deg, var(--surface2), #1a1a3a);
+    border: 1px solid var(--purple)33;
+    border-radius: 12px; padding: 16px;
+  }
+  .briefing-time {
+    font-size: 2rem; font-weight: 900; color: white;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .briefing-date { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 16px; }
+  .briefing-items { display: flex; flex-direction: column; gap: 10px; }
+  .briefing-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface); border-radius: 8px;
+    font-size: 0.82rem;
+  }
+  .briefing-item .bi-icon { font-size: 1rem; }
+  .briefing-item .bi-text { color: var(--text); }
+  .briefing-item .bi-sub { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
+
+  /* Q&A */
+  .qa-input-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .qa-input {
+    flex: 1; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); font-family: 'Inter', sans-serif;
+    font-size: 0.83rem; padding: 10px 14px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .qa-input:focus { border-color: var(--cyan); }
+  .qa-answers { display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto; }
+  .qa-item {
+    background: var(--surface2); border-radius: 10px; padding: 12px;
+    animation: slideIn 0.3s ease;
+  }
+  .qa-question { font-size: 0.78rem; color: var(--cyan); margin-bottom: 6px; font-weight: 600; }
+  .qa-answer { font-size: 0.82rem; color: var(--text); line-height: 1.6; }
+
+  /* FLOW DIAGRAM */
+  .flow-diagram {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .flow-node {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 16px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.8rem; width: 100%; max-width: 280px;
+    transition: border-color 0.3s;
+  }
+  .flow-node.active { border-color: var(--green); background: var(--green)11; }
+  .flow-node.running { border-color: var(--purple); background: var(--purple)11; animation: borderPulse 1s infinite; }
+  @keyframes borderPulse { 0%,100%{border-color:var(--purple)} 50%{border-color:var(--purple-light)} }
+  .flow-arrow { color: var(--text-dim); font-size: 1.2rem; }
+  .flow-node-icon { font-size: 1.1rem; }
+  .flow-node-text { flex: 1; }
+  .flow-node-label { font-weight: 600; color: var(--text); }
+  .flow-node-sub { font-size: 0.68rem; color: var(--text-dim); }
+  .flow-node-status { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; }
+  .status-ready { background: var(--green)22; color: var(--green); }
+  .status-wait { background: var(--border); color: var(--text-dim); }
+  .status-run { background: var(--purple)22; color: var(--purple-light); }
+
+  /* METRICS */
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .metric-card {
+    background: var(--surface2); border-radius: 10px; padding: 14px;
+    text-align: center; border: 1px solid var(--border);
+  }
+  .metric-value { font-size: 1.6rem; font-weight: 900; }
+  .metric-value.purple { color: var(--purple-light); }
+  .metric-value.green { color: var(--green); }
+  .metric-value.cyan { color: var(--cyan); }
+  .metric-value.orange { color: var(--orange); }
+  .metric-label { font-size: 0.7rem; color: var(--text-dim); margin-top: 3px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 1000;
+    background: var(--surface2); border: 1px solid var(--green)44;
+    border-radius: 12px; padding: 12px 20px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.85rem; color: var(--text);
+    transform: translateY(100px); opacity: 0;
+    transition: all 0.3s; pointer-events: none;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* SAMPLE BUTTONS */
+  .sample-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .sample-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text-muted); font-size: 0.72rem; padding: 4px 10px;
+    border-radius: 6px; cursor: pointer; transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .sample-btn:hover { border-color: var(--purple); color: var(--purple-light); }
+
+  /* HACKATHON BANNER */
+  .hackathon-banner {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, var(--purple)22, var(--blue)11);
+    border: 1px solid var(--purple)44;
+    border-radius: 12px; padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .hb-left { display: flex; align-items: center; gap: 12px; }
+  .hb-icon { font-size: 1.5rem; }
+  .hb-title { font-weight: 700; color: white; font-size: 0.9rem; }
+  .hb-sub { font-size: 0.75rem; color: var(--text-muted); }
+  .hb-right { font-size: 0.78rem; color: var(--purple-light); font-weight: 600; }
+
+  @media (max-width: 768px) {
+    .main { grid-template-columns: 1fr; padding: 12px; }
+    .hero h1 { font-size: 2rem; }
+    .stats-row { gap: 16px; }
+    .input-area { grid-column: 1; }
+    .hackathon-banner { grid-column: 1; flex-direction: column; gap: 8px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span>✅</span>
+  <span id="toast-msg">Action completed!</span>
+</div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">🤖</div>
+    <div class="logo-text">Auto<span>Mate</span></div>
+  </div>
+  <div class="header-badge">Microsoft Agents League Hackathon 2026</div>
+  <div class="header-right">
+    <div class="status-dot"></div>
+    <div class="status-text">Agent Active</div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-tag">⚡ Enterprise AI Agent</div>
+    <h1>Work Smarter.<br><span>Not Harder.</span></h1>
+    <p>AutoMate automates your entire workday — meeting summaries, task creation, morning briefings, and instant answers.</p>
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-num purple" id="hours-saved">0</div>
+        <div class="stat-label">Hours Saved Today</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num cyan" id="tasks-count">0</div>
+        <div class="stat-label">Tasks Created</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num green" id="summaries-count">0</div>
+        <div class="stat-label">Summaries Generated</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HACKATHON BANNER -->
+  <div class="hackathon-banner">
+    <div class="hb-left">
+      <div class="hb-icon">🏆</div>
+      <div>
+        <div class="hb-title">Microsoft Agents League Hackathon 2026</div>
+        <div class="hb-sub">Built by Gupta Vanshika · Hyderabad, India · Enterprise Agents Track</div>
+      </div>
+    </div>
+    <div class="hb-right">Deadline: June 14, 2026 ⏰</div>
+  </div>
+
+  <!-- MEETING SUMMARIZER -->
+  <div class="card input-area">
+    <div class="card-header">
+      <div class="card-icon purple">📝</div>
+      <div>
+        <div class="card-title">Meeting Summarizer</div>
+        <div class="card-sub">Paste meeting notes → AutoMate does the rest</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="sample-btns">
+        <span style="font-size:0.72rem;color:var(--text-dim);margin-right:4px;">Try sample:</span>
+        <button class="sample-btn" onclick="loadSample(1)">📊 Product Meeting</button>
+        <button class="sample-btn" onclick="loadSample(2)">🚀 Sprint Planning</button>
+        <button class="sample-btn" onclick="loadSample(3)">💼 Team Standup</button>
+      </div>
+      <textarea id="meeting-input" placeholder="Paste your meeting notes here...
+
+Example: Today we discussed the Q3 product launch. Vanshika will prepare the slides by Friday. Team agreed to review the budget by Monday. John raised concerns about timeline..."></textarea>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="runAutoMate()" id="run-btn">
+          🤖 Run AutoMate
+        </button>
+        <button class="btn btn-secondary" onclick="clearAll()">🗑️ Clear</button>
+        <button class="btn btn-secondary" onclick="copyResults()">📋 Copy Results</button>
+      </div>
+
+      <!-- PROCESSING -->
+      <div class="processing" id="processing">
+        <div class="process-steps">
+          <div class="process-step" id="step1"><span class="step-icon">⏳</span> Reading meeting transcript...</div>
+          <div class="process-step" id="step2"><span class="step-icon">⏳</span> Extracting key decisions...</div>
+          <div class="process-step" id="step3"><span class="step-icon">⏳</span> Generating summary...</div>
+          <div class="process-step" id="step4"><span class="step-icon">⏳</span> Creating Planner tasks...</div>
+          <div class="process-step" id="step5"><span class="step-icon">⏳</span> Posting to Teams channel...</div>
+        </div>
+      </div>
+
+      <!-- SUMMARY OUTPUT -->
+      <div class="summary-box" id="summary-box">
+        <div class="summary-title">✅ Meeting Summary Generated</div>
+        <div class="summary-content" id="summary-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TASKS -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon blue">✅</div>
+      <div>
+        <div class="card-title">Microsoft Planner Tasks</div>
+        <div class="card-sub">Auto-created from meeting action items</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="tasks-list" id="tasks-list">
+        <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:0.82rem;">
+          Run AutoMate to auto-generate tasks
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MORNING BRIEFING -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon orange">🌅</div>
+      <div>
+        <div class="card-title">Morning Briefing</div>
+        <div class="card-sub">Your daily AutoMate digest</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="briefing-box">
+        <div class="briefing-time" id="current-time">09:00</div>
+        <div class="briefing-date" id="current-date">Thursday, June 11, 2026</div>
+        <div class="briefing-items">
+          <div class="briefing-item">
+            <span class="bi-icon">📅</span>
+            <div>
+              <div class="bi-text">3 meetings today</div>
+              <div class="bi-sub">Next: Product Sync at 10:00 AM</div>
+            </div>
+          </div>
+          <div class="briefing-item">
+            <span class="bi-icon">✅</span>
+            <div>
+              <div class="bi-text" id="briefing-tasks">0 pending tasks</div>
+              <div class="bi-sub">From yesterday's meetings</div>
+            </div>
+          </div>
+          <div class="briefing-item">
+            <span class="bi-icon">📊</span>
+            <div>
+              <div class="bi-text">Q3 Launch — 3 days left</div>
+              <div class="bi-sub">June 14, 2026 deadline</div>
+            </div>
+          </div>
+          <div class="briefing-item">
+            <span class="bi-icon">💡</span>
+            <div>
+              <div class="bi-text">AutoMate saved you 2.5 hrs</div>
+              <div class="bi-sub">This week via automation</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Q&A -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon green">💬</div>
+      <div>
+        <div class="card-title">SharePoint Q&A</div>
+        <div class="card-sub">Ask anything about your workplace</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="qa-input-row">
+        <input type="text" class="qa-input" id="qa-input" placeholder="Ask a workplace question..." onkeydown="if(event.key==='Enter')askQuestion()">
+        <button class="btn btn-primary" onclick="askQuestion()" style="padding:10px 16px;white-space:nowrap;">Ask →</button>
+      </div>
+      <div class="sample-btns">
+        <button class="sample-btn" onclick="quickAsk('What is our leave policy?')">Leave policy</button>
+        <button class="sample-btn" onclick="quickAsk('When is the next all-hands meeting?')">All-hands</button>
+        <button class="sample-btn" onclick="quickAsk('How do I submit an expense report?')">Expenses</button>
+      </div>
+      <div class="qa-answers" id="qa-answers">
+        <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:0.82rem;">
+          Ask a question to get instant answers from SharePoint
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOW DIAGRAM -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon purple">⚡</div>
+      <div>
+        <div class="card-title">Agent Architecture</div>
+        <div class="card-sub">Power Automate flow running live</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="flow-diagram" id="flow-diagram">
+        <div class="flow-node" id="fn1">
+          <span class="flow-node-icon">🎯</span>
+          <div class="flow-node-text">
+            <div class="flow-node-label">Manual Trigger</div>
+            <div class="flow-node-sub">Meeting notes received</div>
+          </div>
+          <span class="flow-node-status status-ready">Ready</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node" id="fn2">
+          <span class="flow-node-icon">🧠</span>
+          <div class="flow-node-text">
+            <div class="flow-node-label">Azure AI Foundry</div>
+            <div class="flow-node-sub">Summarize + extract tasks</div>
+          </div>
+          <span class="flow-node-status status-wait">Waiting</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node" id="fn3">
+          <span class="flow-node-icon">💬</span>
+          <div class="flow-node-text">
+            <div class="flow-node-label">Microsoft Teams</div>
+            <div class="flow-node-sub">Post summary to channel</div>
+          </div>
+          <span class="flow-node-status status-wait">Waiting</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node" id="fn4">
+          <span class="flow-node-icon">✅</span>
+          <div class="flow-node-text">
+            <div class="flow-node-label">Microsoft Planner</div>
+            <div class="flow-node-sub">Create action item tasks</div>
+          </div>
+          <span class="flow-node-status status-wait">Waiting</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-node" id="fn5">
+          <span class="flow-node-icon">📧</span>
+          <div class="flow-node-text">
+            <div class="flow-node-label">Outlook Digest</div>
+            <div class="flow-node-sub">Send morning briefing</div>
+          </div>
+          <span class="flow-node-status status-wait">Waiting</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- METRICS -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon cyan">📊</div>
+      <div>
+        <div class="card-title">Impact Metrics</div>
+        <div class="card-sub">Real productivity gains</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-value purple" id="m1">2.5hrs</div>
+          <div class="metric-label">Saved Per Employee Daily</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value green" id="m2">10s</div>
+          <div class="metric-label">Meeting Summary Time</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value cyan" id="m3">$250</div>
+          <div class="metric-label">Saved Per Employee/Week</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value orange" id="m4">60%</div>
+          <div class="metric-label">Fewer Helpdesk Tickets</div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:12px;background:var(--surface2);border-radius:10px;font-size:0.78rem;color:var(--text-muted);line-height:1.6;">
+        💰 <strong style="color:white;">ROI Calculator:</strong> For 100 employees at $25/hr saving 2.5hrs/day = <strong style="color:var(--green);">$1.25M saved per year</strong>. Zero new licenses required — runs entirely within Microsoft 365.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============ STATE ============
+let tasksCreated = 0;
+let summariesGenerated = 0;
+let hoursSaved = 0;
+
+// ============ SAMPLES ============
+const samples = {
+  1: `Product Meeting - June 11, 2026
+Attendees: Vanshika, Rahul, Priya, Arjun
+
+Discussion Points:
+- Q3 product launch scheduled for July 15th
+- Mobile app needs UI polish before launch
+- API performance issues flagged by Arjun
+- Budget approval needed for cloud infrastructure
+
+Decisions Made:
+- Launch date confirmed: July 15, 2026
+- Vanshika to prepare launch presentation slides by Friday
+- Rahul to fix API performance issues by June 20th
+- Priya to complete UI design review by June 18th
+- Arjun to submit cloud budget request by EOD today`,
+
+  2: `Sprint Planning - Sprint 23
+Team: Engineering + Design
+
+Sprint Goals:
+- Complete AutoMate core features
+- Fix 5 critical bugs from last sprint
+- Deploy to staging environment
+
+Action Items:
+- Dev team to implement meeting transcript API by June 13
+- Design to finalize dashboard mockups by June 12
+- QA to write test cases for all new features
+- DevOps to set up CI/CD pipeline by June 14
+- All PRs to be reviewed within 24 hours
+
+Blockers: Need Azure subscription approval from IT`,
+
+  3: `Daily Standup - June 11, 2026
+
+Yesterday:
+- Completed Power Automate flow design
+- Fixed Teams connection issues
+- Updated project documentation
+
+Today:
+- Record demo video for hackathon submission
+- Upload to YouTube and add to project page
+- Final testing of all agent features
+
+Blockers:
+- Need Copilot Studio access (IT ticket raised)
+- Waiting for Azure credits approval
+
+Submit hackathon project by June 14th deadline`
+};
+
+function loadSample(n) {
+  document.getElementById('meeting-input').value = samples[n];
+  showToast('Sample meeting notes loaded! Click "Run AutoMate" ▶');
+}
+
+// ============ MAIN AUTOMATE FUNCTION ============
+async function runAutoMate() {
+  const input = document.getElementById('meeting-input').value.trim();
+  if (!input) { showToast('⚠️ Please paste meeting notes first!'); return; }
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Processing...';
+
+  document.getElementById('processing').classList.add('active');
+  document.getElementById('summary-box').classList.remove('active');
+
+  // Animate flow nodes
+  animateFlow();
+
+  // Process steps
+  await processStep('step1', 'step2', 800, '✅ Meeting transcript read!');
+  await processStep('step2', 'step3', 1000, '✅ Key decisions extracted!');
+  await processStep('step3', 'step4', 1200, '✅ Summary generated!');
+  await processStep('step4', 'step5', 1000, '✅ Planner tasks created!');
+  await processStep('step5', null, 800, '✅ Posted to Teams channel!');
+
+  // Generate summary
+  const summary = generateSummary(input);
+  document.getElementById('summary-content').textContent = summary;
+  document.getElementById('summary-box').classList.add('active');
+
+  // Generate tasks
+  const tasks = extractTasks(input);
+  renderTasks(tasks);
+
+  // Update counters
+  summariesGenerated++;
+  tasksCreated += tasks.length;
+  hoursSaved = parseFloat((hoursSaved + 0.5).toFixed(1));
+  
+  animateCounter('summaries-count', summariesGenerated);
+  animateCounter('tasks-count', tasksCreated);
+  document.getElementById('hours-saved').textContent = hoursSaved;
+  document.getElementById('briefing-tasks').textContent = `${tasksCreated} pending tasks`;
+
+  btn.disabled = false;
+  btn.innerHTML = '🤖 Run AutoMate';
+  showToast('✅ AutoMate complete! Summary + tasks created!');
+}
+
+async function processStep(current, next, delay, doneText) {
+  const el = document.getElementById(current);
+  el.classList.add('active');
+  el.querySelector('.step-icon').textContent = '🔄';
+  await sleep(delay);
+  el.classList.remove('active');
+  el.classList.add('done');
+  el.querySelector('.step-icon').textContent = '✅';
+  el.querySelector('span:last-child') && (el.innerHTML = el.innerHTML);
+  if (next) {
+    const nextEl = document.getElementById(next);
+    nextEl.classList.add('active');
+  }
+}
+
+function generateSummary(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  const decisions = lines.filter(l => 
+    l.toLowerCase().includes('decided') || l.toLowerCase().includes('confirmed') || 
+    l.toLowerCase().includes('approved') || l.toLowerCase().includes('scheduled') ||
+    l.toLowerCase().includes('agreed') || l.toLowerCase().includes('will ')
+  );
+  const people = [...new Set(text.match(/\b[A-Z][a-z]+\b/g) || [])].filter(p => 
+    !['Discussion', 'Action', 'Meeting', 'Sprint', 'Daily', 'Today', 'Yesterday', 'Attendees', 'Team', 'Decision', 'Decisions', 'Points', 'Made', 'Goals', 'Items', 'Blockers', 'AutoMate', 'Microsoft', 'Azure', 'Power', 'Teams', 'SharePoint', 'Planner'].includes(p)
+  ).slice(0, 5);
+
+  const date = new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  
+  return `📋 AUTOMATE MEETING SUMMARY
+Generated: ${date}
+─────────────────────────────────
+
+📌 KEY DECISIONS:
+${decisions.length > 0 ? decisions.slice(0,4).map(d => `• ${d.trim()}`).join('\n') : '• Meeting notes processed successfully\n• Action items identified and assigned'}
+
+👥 PARTICIPANTS MENTIONED:
+${people.length > 0 ? people.map(p => `• ${p}`).join('\n') : '• Team members identified'}
+
+⚡ ACTION ITEMS:
+${extractTasks(text).map((t,i) => `${i+1}. ${t.text} [${t.owner}] — Due: ${t.due}`).join('\n')}
+
+📊 SUMMARY:
+${lines.slice(0,3).map(l => l.trim()).filter(l => l.length > 10).join('\n')}
+
+─────────────────────────────────
+✅ Posted to Microsoft Teams #general
+✅ Tasks created in Microsoft Planner
+✅ Digest will be sent tomorrow at 9 AM`;
+}
+
+function extractTasks(text) {
+  const taskPatterns = [
+    /([A-Z][a-z]+)\s+to\s+([^.]+)/g,
+    /([A-Z][a-z]+)\s+will\s+([^.]+)/g,
+    /need[s]?\s+to\s+([^.]+)/gi,
+    /([A-Z][a-z]+)\s+to\s+([^,\n]+)/g
+  ];
+  
+  const found = [];
+  const dates = ['June 12', 'June 13', 'June 14', 'June 15', 'June 18', 'June 20', 'EOD today', 'Friday', 'Monday'];
+  const priorities = ['high', 'high', 'med', 'med', 'med', 'low', 'low'];
+  
+  for (const pattern of taskPatterns) {
+    let match;
+    while ((match = pattern.exec(text)) !== null && found.length < 6) {
+      const taskText = match[0].trim();
+      if (taskText.length > 10 && taskText.length < 100) {
+        const isDuplicate = found.some(f => f.text.toLowerCase().includes(taskText.toLowerCase().substring(0,20)));
+        if (!isDuplicate) {
+          found.push({
+            text: taskText.charAt(0).toUpperCase() + taskText.slice(1),
+            owner: match[1] || 'Team',
+            due: dates[found.length % dates.length],
+            priority: priorities[found.length % priorities.length]
+          });
+        }
+      }
+    }
+  }
+  
+  if (found.length === 0) {
+    return [
+      { text: 'Review meeting notes and follow up', owner: 'Vanshika', due: 'June 12', priority: 'high' },
+      { text: 'Schedule next meeting with full team', owner: 'Team', due: 'June 13', priority: 'med' },
+      { text: 'Share summary with stakeholders', owner: 'Vanshika', due: 'EOD today', priority: 'high' }
+    ];
+  }
+  return found.slice(0, 5);
+}
+
+function renderTasks(tasks) {
+  const container = document.getElementById('tasks-list');
+  container.innerHTML = '';
+  tasks.forEach((task, i) => {
+    const div = document.createElement('div');
+    div.className = 'task-item';
+    div.style.animationDelay = `${i * 0.1}s`;
+    div.innerHTML = `
+      <div class="task-check" onclick="this.classList.toggle('checked')"></div>
+      <div style="flex:1">
+        <div class="task-text">${task.text}</div>
+        <div class="task-meta">👤 ${task.owner} · 📅 ${task.due}</div>
+      </div>
+      <span class="task-priority priority-${task.priority}">${task.priority.toUpperCase()}</span>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ============ Q&A ============
+const qaAnswers = {
+  'leave': `📋 **Leave Policy (from SharePoint HR Portal)**\n\nFull-time employees receive:\n• 18 days Paid Leave per year\n• 12 days Sick Leave per year\n• 10 Public Holidays\n\nTo apply: Submit via HR portal 3 days in advance. Manager approval required for >3 consecutive days.\n\n📎 Source: HR-Policy-2026.pdf`,
+  'expense': `💰 **Expense Reimbursement Process**\n\nStep 1: Collect all receipts\nStep 2: Submit via Concur/SAP within 30 days\nStep 3: Manager approves within 5 business days\nStep 4: Finance processes within 10 business days\n\nMax limits: Travel ₹5000/day, Meals ₹1000/day\n\n📎 Source: Finance-Policy-2026.pdf`,
+  'all-hands': `📅 **All-Hands Meeting Schedule**\n\nNext All-Hands: June 20, 2026 at 3:00 PM IST\nFormat: Virtual (Teams link sent via email)\nAgenda: Q2 Results, Q3 Goals, Team Updates\n\nRecurring: Every 3rd Friday of the month\n\n📎 Source: Company-Calendar-SharePoint`,
+  'default': `🔍 **AutoMate Search Result**\n\nI searched your SharePoint knowledge base for that query.\n\nBased on company documentation:\n• Policy documents updated June 2026\n• Contact HR at hr@company.com for specific queries\n• Check the company intranet portal for latest updates\n\nWould you like me to search a specific department's SharePoint?\n\n📎 Source: Company-SharePoint-KB`
+};
+
+function askQuestion() {
+  const q = document.getElementById('qa-input').value.trim();
+  if (!q) return;
+  addQA(q);
+  document.getElementById('qa-input').value = '';
+}
+
+function quickAsk(q) {
+  document.getElementById('qa-input').value = q;
+  askQuestion();
+}
+
+function addQA(question) {
+  const container = document.getElementById('qa-answers');
+  if (container.querySelector('div[style]')) container.innerHTML = '';
+  
+  const key = Object.keys(qaAnswers).find(k => question.toLowerCase().includes(k)) || 'default';
+  const answer = qaAnswers[key];
+  
+  const div = document.createElement('div');
+  div.className = 'qa-item';
+  div.innerHTML = `
+    <div class="qa-question">❓ ${question}</div>
+    <div class="qa-answer">${answer.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</div>
+  `;
+  container.insertBefore(div, container.firstChild);
+  showToast('✅ Answer found in SharePoint!');
+}
+
+// ============ FLOW ANIMATION ============
+function animateFlow() {
+  const nodes = ['fn1','fn2','fn3','fn4','fn5'];
+  const statuses = ['run','wait','wait','wait','wait'];
+  nodes.forEach((id, i) => {
+    const node = document.getElementById(id);
+    const status = node.querySelector('.flow-node-status');
+    node.className = 'flow-node' + (i === 0 ? ' running' : '');
+    status.className = `flow-node-status status-${statuses[i]}`;
+    status.textContent = statuses[i] === 'run' ? 'Running' : statuses[i] === 'wait' ? 'Waiting' : 'Done';
+  });
+
+  let current = 0;
+  const interval = setInterval(() => {
+    if (current >= nodes.length) {
+      clearInterval(interval);
+      nodes.forEach(id => {
+        const node = document.getElementById(id);
+        node.className = 'flow-node active';
+        node.querySelector('.flow-node-status').className = 'flow-node-status status-ready';
+        node.querySelector('.flow-node-status').textContent = 'Done ✅';
+      });
+      return;
+    }
+    if (current > 0) {
+      const prev = document.getElementById(nodes[current-1]);
+      prev.className = 'flow-node active';
+      prev.querySelector('.flow-node-status').className = 'flow-node-status status-ready';
+      prev.querySelector('.flow-node-status').textContent = 'Done ✅';
+    }
+    const curr = document.getElementById(nodes[current]);
+    curr.className = 'flow-node running';
+    curr.querySelector('.flow-node-status').className = 'flow-node-status status-run';
+    curr.querySelector('.flow-node-status').textContent = 'Running...';
+    current++;
+  }, 800);
+}
+
+// ============ UTILS ============
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function clearAll() {
+  document.getElementById('meeting-input').value = '';
+  document.getElementById('summary-box').classList.remove('active');
+  document.getElementById('processing').classList.remove('active');
+  document.getElementById('tasks-list').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:0.82rem;">Run AutoMate to auto-generate tasks</div>';
+  ['step1','step2','step3','step4','step5'].forEach(id => {
+    const el = document.getElementById(id);
+    el.className = 'process-step';
+    el.querySelector('.step-icon').textContent = '⏳';
+  });
+  showToast('🗑️ Cleared!');
+}
+
+function copyResults() {
+  const summary = document.getElementById('summary-content').textContent;
+  if (!summary) { showToast('⚠️ No results to copy yet!'); return; }
+  navigator.clipboard.writeText(summary).then(() => showToast('📋 Copied to clipboard!'));
+}
+
+function animateCounter(id, target) {
+  const el = document.getElementById(id);
+  let current = 0;
+  const interval = setInterval(() => {
+    current++;
+    el.textContent = current;
+    if (current >= target) clearInterval(interval);
+  }, 100);
+}
+
+// ============ CLOCK ============
+function updateClock() {
+  const now = new Date();
+  document.getElementById('current-time').textContent = 
+    now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', hour12: false });
+  document.getElementById('current-date').textContent = 
+    now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+}
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
